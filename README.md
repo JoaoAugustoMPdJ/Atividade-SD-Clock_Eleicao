@@ -1,23 +1,22 @@
-
-# ** Relatório - Implementação de Algoritmos Distribuídos**  
- **Disciplina**: Sistemas Distribuídos  
- **Aluno**: João Augusto Moura Peixoto de Jesus
- **Professor**: Felipe Silva  
+# **Relatório - Implementação de Algoritmos Distribuídos**  
+**Disciplina**: Sistemas Distribuídos  
+**Aluno**: João Augusto Moura Peixoto de Jesus 
+**Professor**: Felipe Silva  
 
 ---
 
-## ** Clocks e Sincronização de Tempo - Simulação de Transações Bancárias**  
+## *Clocks e Sincronização de Tempo - Simulação de Transações Bancárias*
 
-### **Objetivo**  
-Implementar o **Relógio de Lamport** para sincronizar eventos em um sistema bancário distribuído, garantindo que as transações sejam processadas na ordem correta.  
+### *Objetivo*  
+Implementar o *Relógio de Lamport* para sincronizar eventos em um sistema bancário distribuído, garantindo que as transações sejam processadas na ordem correta.  
 
-### **Explicação do Algoritmo**  
-- Cada agência bancária possui um **relógio lógico**.  
+### *Explicação do Algoritmo*  
+- Cada agência bancária possui um *relógio lógico*.  
 - Quando uma transação ocorre, o relógio é incrementado.  
 - Ao enviar uma transação, o timestamp da operação é anexado.  
 - Ao receber uma transação, a agência ajusta seu relógio lógico.  
 
-### **Código Implementado**  
+### *Código Implementado*  
 ```python
 import json
 import random
@@ -50,23 +49,23 @@ bancos[1].enviar_transacao(bancos[2], random.randint(50, 300))
 bancos[2].evento("Saque", random.randint(50, 500))
 ```
 
-### **Conclusão**  
+### *Conclusão*  
 O sistema permite a sincronização correta das transações sem a necessidade de um relógio global, garantindo uma ordem lógica dos eventos.
 
 ---
 
-## ** Estado Global e Captura de Estado - Processos em um Computador**  
+## *Estado Global e Captura de Estado - Processos em um Computador*  
 
-### **Objetivo**  
-Implementar o **Algoritmo de Chandy-Lamport** para capturar o estado global de processos em execução dentro de um sistema operacional.  
+### *Objetivo* 
+Implementar o *Algoritmo de Chandy-Lamport* para capturar o estado global de processos em execução dentro de um sistema operacional.  
 
-### **Explicação do Algoritmo**  
-- Cada processo representa um **programa** em execução no computador.  
+### *Explicação do Algoritmo*  
+- Cada processo representa um *programa* em execução no computador.  
 - Um dos processos inicia o snapshot.  
 - Cada processo salva seu estado atual (uso de CPU e memória).  
 - O snapshot pode ser usado para depuração ou recuperação do sistema.  
 
-### **Código Implementado**  
+### *Código Implementado*  
 ```python
 import random
 import threading
@@ -98,18 +97,18 @@ for p in processos:
     p.capturar_estado()
 ```
 
-### **Conclusão**  
+### *Conclusão*  
 A captura de estado garante que o sistema possa registrar os estados de processos sem interromper suas execuções.
 
 ---
 
-## ** Algoritmo de Eleição - Luffy, Zoro e Sanji**  
+## *Algoritmo de Eleição - Luffy, Zoro e Sanji* 
 
-### **Objetivo**  
-Implementar o **Algoritmo de Eleição de Bully** usando personagens de One Piece para simular a escolha de um novo capitão em caso de falha do líder.  
+### *Objetivo* 
+Implementar o *Algoritmo de Eleição de Bully* usando personagens de One Piece para simular a escolha de um novo capitão em caso de falha do líder.  
 
-### **Explicação do Algoritmo**  
-- Cada lutador tem uma **força aleatória**.  
+### *Explicação do Algoritmo*  
+- Cada lutador tem uma *força aleatória*.  
 - Se o capitão (Luffy) for derrotado, os outros disputam o comando.  
 - O mais forte assume a liderança e notifica os outros.  
 
@@ -132,7 +131,7 @@ class Lutador:
             return
 
         mais_forte = max(adversarios, key=lambda l: l.forca)
-        print(f"🗡️ {self.nome} desafia {mais_forte.nome}!")
+        print(f" {self.nome} desafia {mais_forte.nome}!")
         mais_forte.iniciar_eleicao(equipe)
 
 # Criando os lutadores
@@ -143,22 +142,22 @@ equipe[0].ativo = False
 equipe[1].iniciar_eleicao(equipe)
 ```
 
-### **Conclusão**  
+### *Conclusão*  
 O algoritmo simula uma disputa entre personagens, tornando a eleição mais dinâmica e próxima da realidade.
 
 ---
 
-## ** Detecção de Falhas - Monitoramento de Servidores**  
+## *Detecção de Falhas - Monitoramento de Servidores* 
 
-### **Objetivo**  
-Implementar um sistema de **heartbeat** que monitora a atividade dos servidores e detecta falhas automaticamente.  
+### *Objetivo*  
+Implementar um sistema de *heartbeat* que monitora a atividade dos servidores e detecta falhas automaticamente.  
 
-### **Explicação do Algoritmo**  
-- Cada servidor envia **sinais de vida (heartbeats)** periodicamente.  
+### *Explicação do Algoritmo* 
+- Cada servidor envia *sinais de vida (heartbeats)* periodicamente.  
 - Se um servidor parar de responder, ele é marcado como inativo.  
 - O sistema remove o servidor falho da rede.  
 
-### **Código Implementado**  
+### *Código Implementado* 
 ```python
 import time
 import threading
@@ -176,7 +175,11 @@ class Monitoramento:
                 if not servidor.esta_online():
                     print(f" Servidor {id} está fora do ar!")
                     del self.servidores[id]
+                    self.responder_a_falha(id)  # Responde à falha do servidor
             time.sleep(3)
+
+    def responder_a_falha(self, id):
+        print(f" Aplicando medidas de recuperação para o servidor {id}...")
 
 class Servidor:
     def __init__(self, id):
@@ -205,10 +208,17 @@ time.sleep(6)
 servidores[1].online = False  # Simula falha
 ```
 
-### **Conclusão**  
+### *Conclusão*
 O monitoramento automático permite detectar falhas em tempo real, garantindo a estabilidade do sistema.
 
----
 
-## ** Conclusão Geral**  
-A cada implementação apresentei um **cenário realista**, pois assim achei mais fácil de interpretar os conceitos propostos; Utilizando **valores aleatórios** e **mensagens descritivas** para tornar o código mais compreensivel.
+
+## *Conclusão Geral*  
+A cada implementação, apresentei um *cenário realista*, pois assim achei mais fácil de interpretar os conceitos propostos. Utilizei *valores aleatórios* e *mensagens descritivas* para tornar o código mais compreensível.  
+
+- *Relógio de Lamport*: Garantiu a ordem lógica das transações bancárias.  
+- *Algoritmo de Chandy-Lamport*: Permitiu a captura de estados globais sem interromper a execução dos processos.  
+- *Algoritmo de Eleição de Bully*: Simulou a escolha de um novo líder de forma dinâmica.  
+- *Monitoramento de Servidores*: Detectou falhas e respondeu de forma eficiente.  
+
+Esses projetos foram uma excelente oportunidade para aprender sobre *sistemas distribuídos* e suas aplicações práticas.
