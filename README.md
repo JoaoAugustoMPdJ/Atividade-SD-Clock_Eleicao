@@ -221,4 +221,4 @@ A cada implementação, apresentei um *cenário realista*, pois assim achei mais
 - *Algoritmo de Eleição de Bully*: Simulou a escolha de um novo líder de forma dinâmica.  
 - *Monitoramento de Servidores*: Detectou falhas e respondeu de forma eficiente.  
 
-Esses projetos foram uma excelente oportunidade para aprender sobre *sistemas distribuídos* e suas aplicações práticas.
+
