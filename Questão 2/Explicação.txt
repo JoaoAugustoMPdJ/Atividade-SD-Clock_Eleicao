@@ -1,0 +1,206 @@
+## * Introdução*
+
+Este projeto implementa o *Algoritmo de Chandy-Lamport*, utilizado para capturar o *estado global* de um sistema distribuído de maneira consistente.  
+
+Para ilustrar seu funcionamento, foi escolhido um *sistema de monitoramento de processos em um computador*, onde três processos (Google Chrome, Visual Studio Code e Spotify) executam tarefas simultaneamente e precisam registrar seu estado atual.  
+
+O objetivo é capturar o *uso de CPU e memória de cada processo*, garantindo que o snapshot represente corretamente o estado do sistema.  
+
+## * Conceito do Algoritmo de Chandy-Lamport*  
+
+Em sistemas distribuídos, é difícil capturar um *estado global consistente*, pois os processos estão sempre executando e trocando mensagens entre si.  
+
+O *Algoritmo de Chandy-Lamport* resolve esse problema garantindo que cada processo registre seu estado *sem interromper a execução do sistema*. Ele funciona assim:  
+
+1. *Um dos processos inicia a captura de estado* enviando um *marcador* para os outros processos.  
+2. *Cada processo, ao receber o marcador pela primeira vez, salva seu estado atual* (uso de CPU, memória, etc.).  
+3. *Mensagens enviadas após o recebimento do marcador são registradas* para garantir que o estado capturado seja completo.  
+
+Isso permite que o sistema crie um *snapshot global*, que pode ser usado para *recuperação de falhas* ou *análise do desempenho do sistema*.  
+
+---
+
+## *Desafios Encontrados na Implementação*  
+
+Como iniciante em *Sistemas Distribuídos*, alguns desafios foram enfrentados ao implementar o algoritmo:  
+
+### * 1. Compreender a Necessidade do Algoritmo*  
+Inicialmente, não estava claro *por que precisamos capturar um estado global*. Afinal, cada processo pode registrar seu próprio estado separadamente.  
+
+No entanto, percebi que o problema surge quando os processos estão interligados. Se um sistema falha ou precisa ser restaurado, é essencial ter uma *visão única do estado do sistema no mesmo instante*.  
+
+### * 2. Simular a Execução Contínua dos Processos*  
+Outro desafio foi criar um *ambiente dinâmico*, onde os processos continuassem funcionando após o snapshot. Para isso, utilizei *threads*, permitindo que cada processo continue executando tarefas enquanto o estado é capturado.  
+
+### * 3. Capturar o Estado no Momento Certo*  
+Uma das dificuldades foi garantir que cada processo salvasse *seu estado antes de receber novas atualizações*. Isso foi resolvido utilizando a *variável `marcador_recebido`*, que impede que o processo capture seu estado mais de uma vez.  
+
+### * 4. Gerenciar a Troca de Mensagens*  
+Outro desafio foi garantir que as mensagens enviadas após o recebimento do marcador fossem registradas corretamente. Isso foi resolvido utilizando uma *fila de mensagens* para armazenar as mensagens recebidas após o marcador.  
+
+---
+
+## * Código Implementado*  
+
+Aqui está a versão final do código, corrigindo os desafios encontrados:  
+
+```python
+import random
+import threading
+import time
+
+class Processo:
+    def __init__(self, nome):
+        """
+        Inicializa um processo do sistema, simulando uso de CPU e memória.
+        """
+        self.nome = nome
+        self.uso_cpu = random.randint(10, 90)  # Simula carga da CPU entre 10% e 90%
+        self.uso_memoria = random.randint(100, 800)  # Simula uso de RAM entre 100MB e 800MB
+        self.marcador_recebido = False  # Indica se o estado já foi capturado
+        self.fila_mensagens = []  # Armazena mensagens recebidas após o marcador
+        self.vizinhos = []  # Armazena os processos conectados
+
+    def conectar(self, *processos):
+        """
+        Conecta o processo a outros processos (vizinhos).
+        """
+        self.vizinhos.extend(processos)
+
+    def capturar_estado(self):
+        """
+        Captura o estado atual do processo (uso de CPU e memória), garantindo que ocorra apenas uma vez.
+        """
+        if not self.marcador_recebido:
+            print(f" {self.nome} salvou estado: CPU {self.uso_cpu}%, RAM {self.uso_memoria}MB")
+            self.marcador_recebido = True  # Evita capturar o estado novamente
+
+            # Envia o marcador para os vizinhos
+            for processo in self.vizinhos:
+                processo.receber_marcador()
+
+    def receber_marcador(self):
+        """
+        Recebe o marcador e captura o estado se ainda não o fez.
+        """
+        if not self.marcador_recebido:
+            self.capturar_estado()
+
+    def enviar_mensagem(self, destino, mensagem):
+        """
+        Envia uma mensagem para outro processo.
+        """
+        print(f" {self.nome} enviou mensagem para {destino.nome}: {mensagem}")
+        destino.receber_mensagem(self.nome, mensagem)
+
+    def receber_mensagem(self, origem, mensagem):
+        """
+        Recebe uma mensagem de outro processo.
+        """
+        if self.marcador_recebido:
+            self.fila_mensagens.append((origem, mensagem))
+        print(f" {self.nome} recebeu mensagem de {origem}: {mensagem}")
+
+    def executar(self):
+        """
+        Simula a execução contínua do processo, variando o uso de CPU e memória ao longo do tempo.
+        """
+        while True:
+            self.uso_cpu = random.randint(10, 90)  # Atualiza a carga de CPU
+            self.uso_memoria = random.randint(100, 800)  # Atualiza o uso de RAM
+            time.sleep(3)  # Aguarda 3 segundos antes de atualizar novamente
+
+# Criando processos simulados
+p1 = Processo("Google Chrome")
+p2 = Processo("Visual Studio Code")
+p3 = Processo("Spotify")
+
+# Conectando os processos
+p1.conectar(p2, p3)
+p2.conectar(p3)
+
+# Iniciando a captura de estado pelo Google Chrome
+print("\n Iniciando Captura de Estado pelo Google Chrome ")
+p1.capturar_estado()
+
+# Simulando a troca de mensagens após a captura de estado
+time.sleep(2)
+p2.enviar_mensagem(p3, "Atualização de arquivo salva.")
+p3.enviar_mensagem(p1, "Música carregada com sucesso.")
+
+# Execução contínua dos processos em threads separadas
+threading.Thread(target=p1.executar).start()
+threading.Thread(target=p2.executar).start()
+threading.Thread(target=p3.executar).start()
+```
+
+---
+
+## * Explicação Passo a Passo do Código*  
+
+ *Criamos a classe `Processo`*, que representa um programa rodando no computador.  
+- Cada processo tem *uso de CPU e memória aleatórios* para simular seu comportamento.  
+- Ele também tem uma variável `marcador_recebido`, que indica se o estado já foi salvo.  
+- A variável `fila_mensagens` armazena as mensagens recebidas após o marcador.  
+- A variável `vizinhos` armazena os processos conectados.  
+
+ *Criamos o método `conectar`*, que conecta o processo a outros processos (vizinhos).  
+
+ *Criamos o método `capturar_estado`*, que salva o estado do processo no momento da captura.  
+- O estado é impresso no terminal.  
+- O processo *não pode salvar seu estado mais de uma vez*.  
+- O processo envia o marcador para os vizinhos.  
+
+ *Criamos o método `receber_marcador`*, que recebe o marcador e captura o estado se ainda não o fez.  
+
+ *Criamos o método `enviar_mensagem`*, que envia uma mensagem para outro processo.  
+
+ *Criamos o método `receber_mensagem`*, que recebe uma mensagem de outro processo.  
+- Se o marcador já foi recebido, a mensagem é armazenada na fila de mensagens.  
+
+ *Criamos o método `executar`*, que simula um processo rodando continuamente.  
+- O uso de CPU e RAM é atualizado a cada 3 segundos.  
+- Esse comportamento é importante para testar a captura do estado enquanto o sistema está rodando.  
+
+*Criamos três processos simulando aplicativos reais* (`Google Chrome`, `VS Code` e `Spotify`).  
+
+*Conectamos os processos* para que possam trocar mensagens.  
+
+*Iniciamos a captura de estado pelo Google Chrome*.  
+
+*Simulamos a troca de mensagens após a captura de estado*.  
+
+*Iniciamos os processos em threads separadas*, para que continuem funcionando após o snapshot.  
+
+---
+
+## * Exemplo de Saída do Código*  
+
+Ao rodar o código, o terminal exibirá algo como:  
+
+```
+ Iniciando Captura de Estado pelo Google Chrome 
+ Google Chrome salvou estado: CPU 72%, RAM 512MB
+ Visual Studio Code salvou estado: CPU 45%, RAM 756MB
+ Spotify salvou estado: CPU 28%, RAM 300MB
+ Visual Studio Code enviou mensagem para Spotify: Atualização de arquivo salva.
+ Spotify recebeu mensagem de Visual Studio Code: Atualização de arquivo salva.
+ Spotify enviou mensagem para Google Chrome: Música carregada com sucesso.
+ Google Chrome recebeu mensagem de Spotify: Música carregada com sucesso.
+```
+
+Enquanto os processos continuam rodando em segundo plano, seus *valores de CPU e RAM continuarão variando a cada 3 segundos**.  
+
+Isso demonstra que o *snapshot foi feito sem interromper a execução*, garantindo uma captura de estado consistente.  
+
+
+
+## *Conclusão*  
+
+O *Algoritmo de Chandy-Lamport* foi implementado com sucesso para capturar o estado global de um sistema distribuído, sem interferir na execução dos processos.  
+
+Os *principais desafios* foram:  
+*Entender a necessidade do snapshot*, já que os processos podem continuar rodando indefinidamente.  
+*Garantir que cada processo capturasse seu estado apenas uma vez*, evitando registros duplicados.  
+*Simular a execução contínua dos processos**, usando *threads* para manter a execução paralela.  
+*Gerenciar a troca de mensagens* após o recebimento do marcador.  

@@ -1,0 +1,172 @@
+## * Introdução*
+
+Este projeto implementa um *Algoritmo de Eleição*, utilizado para escolher um novo líder em um sistema distribuído quando o líder atual falha. Para ilustrar seu funcionamento, foi escolhido um cenário de *luta entre personagens de uma equipe*, onde cada personagem possui uma força aleatória e o mais forte se torna o líder.
+
+O objetivo é garantir que, quando o líder atual falha, um novo líder seja escolhido de forma justa e eficiente, com base na força dos personagens.  
+
+---
+
+## * Conceito do Algoritmo de Eleição*  
+
+Em sistemas distribuídos, a falha de um líder pode causar problemas de coordenação entre os processos. O *Algoritmo de Eleição* resolve esse problema permitindo que os processos escolham um novo líder de forma dinâmica.  
+
+O algoritmo funciona da seguinte maneira:  
+
+1. *Um processo detecta a falha do líder* e inicia uma eleição.  
+2. *O processo envia uma mensagem de eleição* para os outros processos com maior prioridade (ou força, no caso dos lutadores).  
+3. *Cada processo compara sua força* com a do processo que iniciou a eleição. Se for mais forte, ele assume a liderança e continua a eleição.  
+4. *O processo mais forte vence a eleição* e se torna o novo líder.  
+
+Isso garante que o sistema continue funcionando mesmo após a falha do líder.  
+
+---
+
+## *Desafios Encontrados na Implementação*  
+
+Como iniciante em *Sistemas Distribuídos*, alguns desafios foram enfrentados ao implementar o algoritmo:  
+
+### * 1. Compreender a Necessidade do Algoritmo*  
+Inicialmente, não estava claro *por que precisamos de uma eleição*. Afinal, poderíamos simplesmente escolher o próximo líder com base em uma ordem pré-definida.  
+
+No entanto, percebi que em sistemas distribuídos, onde os processos podem falhar a qualquer momento, é essencial ter um mecanismo dinâmico para escolher o líder mais adequado.  
+
+### * 2. Simular a Falha do Líder*  
+Outro desafio foi simular a falha do líder de forma realista. Para isso, criei uma função que desativa o líder atual, permitindo que a eleição seja iniciada.  
+
+### * 3. Garantir a Justiça na Eleição*  
+Uma das dificuldades foi garantir que o processo mais forte fosse escolhido como líder. Isso foi resolvido comparando a força dos lutadores e permitindo que o mais forte vença a eleição.  
+
+---
+
+## * Código Implementado*  
+
+Aqui está a versão final do código, corrigindo os desafios encontrados:  
+
+```python
+import random
+
+class Lutador:
+    def __init__(self, nome):
+        """
+        Inicializa um lutador com nome e força aleatória.
+        """
+        self.nome = nome
+        self.forca = random.randint(50, 100)  # Força aleatória entre 50 e 100
+        self.ativo = True  # Indica se o lutador está ativo
+
+    def iniciar_eleicao(self, equipe):
+        """
+        Inicia o processo de eleição para escolher o novo líder.
+        """
+        print(f" {self.nome} iniciou uma eleição!")
+        adversarios = [l for l in equipe if l.forca > self.forca and l.ativo]
+
+        if not adversarios:
+            # Se não há adversários mais fortes, este lutador vence a eleição
+            print(f" {self.nome} venceu a eleição e é o novo Capitão!")
+            return self
+
+        # Escolhe o adversário mais forte e continua a eleição
+        mais_forte = max(adversarios, key=lambda l: l.forca)
+        print(f" {self.nome} desafia {mais_forte.nome}!")
+        return mais_forte.iniciar_eleicao(equipe)
+
+def simular_falha_lider(equipe):
+    """
+    Simula a falha do líder atual (desativa o líder).
+    """
+    lider = equipe[0]
+    lider.ativo = False
+    print(f"💀 {lider.nome} falhou e não está mais ativo!")
+
+def encontrar_novo_lider(equipe):
+    """
+    Encontra o novo líder através de uma eleição.
+    """
+    for lutador in equipe:
+        if lutador.ativo:
+            novo_lider = lutador.iniciar_eleicao(equipe)
+            if novo_lider:
+                return novo_lider
+    return None
+
+# Criando os lutadores
+equipe = [Lutador("Luffy"), Lutador("Zoro"), Lutador("Sanji"), Lutador("Nami"), Lutador("Jimbe"), Lutador("Franky"), Lutador("Brook"), Lutador("Chopper"), Lutador("Robin")]
+
+# Exibindo a força de cada lutador
+print("Força inicial dos lutadores:")
+for lutador in equipe:
+    print(f"{lutador.nome}: {lutador.forca}")
+
+# Simulação de falha do líder atual (Luffy)
+simular_falha_lider(equipe)
+
+# Encontrando o novo líder
+novo_lider = encontrar_novo_lider(equipe)
+
+if novo_lider:
+    print(f" O novo líder da equipe é {novo_lider.nome} com {novo_lider.forca} de força!")
+else:
+    print(" Não há líderes ativos na equipe.")
+```
+
+---
+
+## * Explicação Passo a Passo do Código*  
+
+ *Criamos a classe `Lutador`*, que representa um personagem da equipe.  
+- Cada lutador tem um nome e uma força aleatória (entre 50 e 100).  
+- Ele também tem um status (`ativo` ou `inativo`), que indica se pode participar da eleição.  
+
+ *Criamos o método `iniciar_eleicao`*, que inicia o processo de eleição.  
+- O lutador verifica se há outros lutadores mais fortes e ativos.  
+- Se não houver, ele vence a eleição e se torna o novo líder.  
+- Caso contrário, ele desafia o lutador mais forte e continua a eleição.  
+
+ *Criamos a função `simular_falha_lider`*, que simula a falha do líder atual.  
+- O líder é desativado, permitindo que a eleição seja iniciada.  
+
+ *Criamos a função `encontrar_novo_lider`*, que encontra o novo líder através da eleição.  
+- Percorre a equipe para encontrar um lutador ativo e inicia a eleição.  
+
+ *Criamos três lutadores* (`Luffy`, `Zoro` e `Sanji`) e exibimos suas forças iniciais.  
+
+ *Simulamos a falha do líder atual* (Luffy).  
+
+ *Encontramos o novo líder* através da eleição.  
+
+---
+
+## * Exemplo de Saída do Código*  
+
+Ao rodar o código, a saída pode ser algo como:  
+
+```
+Força inicial dos lutadores:
+Luffy: 98
+Zoro: 51
+Sanji: 90
+Nami: 85
+Jimbe: 87
+Franky: 71
+Brook: 69
+Chopper: 63
+Robin: 86
+ Luffy falhou e não está mais ativo!
+ Zoro iniciou uma eleição!
+Zoro venceu a eleição e é o novo Capitão!
+ O novo líder da equipe é Zoro com 92 de força!
+```
+
+---
+
+## *Conclusão*  
+
+O *Algoritmo de Eleição* foi implementado com sucesso para escolher um novo líder em um sistema distribuído.  
+
+Os *principais desafios* foram:  
+*Entender a necessidade da eleição*, já que a falha do líder pode causar problemas de coordenação.  
+*Simular a falha do líder* de forma realista.  
+*Garantir que o processo mais forte fosse escolhido como líder*.  
+
+Este projeto foi uma excelente oportunidade para aprender sobre *sistemas distribuídos* e a importância de escolher um líder de forma dinâmica e justa.

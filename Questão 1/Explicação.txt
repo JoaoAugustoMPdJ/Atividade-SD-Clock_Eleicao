@@ -1,0 +1,133 @@
+
+# *Introdução* 
+
+Este projeto implementa o *Relógio de Lamport*, um algoritmo usado para garantir a ordenação correta de eventos em sistemas distribuídos. Para ilustrar seu funcionamento, foi escolhido um *sistema bancário*, onde três agências realizam transações entre si.  
+
+O objetivo é garantir que as transações sejam processadas de forma *coerente*, mesmo sem um relógio global sincronizado entre os bancos.  
+
+## *Conceito do Algoritmo de Lamport*  
+
+O *Relógio de Lamport* é um método utilizado em sistemas distribuídos para manter uma *ordem lógica dos eventos*, mesmo quando não há um relógio físico compartilhado entre os processos.  
+
+Ele funciona da seguinte forma:  
+
+1. *Cada nó (ou processo) mantém um contador lógico (`clock`)*, que começa em `0`.  
+2. *Quando um evento ocorre localmente, o clock é incrementado em `+1`*.  
+3. *Quando um nó envia uma mensagem para outro, ele inclui o timestamp (clock) na mensagem*.  
+4. *Ao receber uma mensagem, o nó atualiza seu clock* para ser o *máximo entre seu valor atual e o timestamp recebido, somado a `+1`*.  
+
+Isso garante que todos os eventos sigam uma *ordem lógica consistente*, mesmo que diferentes processos tenham relógios locais independentes.  
+
+---
+
+## *Desafios Encontrados na Implementação*  
+
+Como primeira vez estudando *Sistemas Distribuídos*, alguns desafios foram enfrentados ao implementar o algoritmo:  
+
+### * 1. Entender a Necessidade do Algoritmo*  
+No início, foi difícil compreender *por que um relógio lógico era necessário*, já que normalmente usamos a hora do sistema. Mas em um ambiente distribuído, onde cada processo pode rodar em máquinas diferentes, os relógios físicos podem não estar sincronizados.  
+
+### * 2. Atualizar Corretamente o Relógio Lógico*  
+Outro desafio foi entender *como atualizar o clock ao enviar e receber mensagens*. Se a atualização não for feita corretamente, o sistema pode acabar processando eventos fora de ordem.  
+### *3. Compreensão geral*
+Afim de compreender melhor o algoritmo e sua utilidade, apliquei todo o conceito no mundo real e encontrei o exemplo do *Sistema Bancario* para simular a aplicação deste algoritmo e só assim consegui entender realmente como ele funciona.
+
+A regra essencial que aprendi foi:  
+- Ao *enviar uma mensagem*, *incrementar* o relógio.  
+- Ao *receber uma mensagem*, *atualizar o relógio para o maior valor entre o timestamp recebido e o valor atual do clock, somado a `+1`*.  
+
+### * 3. Simular um Sistema Bancário com Lamport*
+O próximo desafio foi *adaptar o conceito do Relógio de Lamport para transações bancárias*. Em um banco, as transações precisam ser *processadas na ordem correta*, mesmo que cada agência funcione de forma independente.  
+
+Por exemplo:  
+- Se um saque de R$100 acontecer antes de um depósito de R$500, a conta pode acabar negativa.  
+- O Relógio de Lamport evita esse problema garantindo que os eventos sigam uma ordem *lógica* e *determinística*.  
+
+
+
+## * Código Implementado*
+
+Aqui está a versão final do código, corrigindo os desafios encontrados:  
+
+```python
+import json
+
+class Banco:
+    def __init__(self, nome):
+        """
+        Inicializa uma agência bancária com um relógio lógico e uma lista de transações registradas.
+        """
+        self.nome = nome
+        self.clock = 0  # Relógio lógico da agência
+        self.transacoes = []  # Lista para armazenar transações registradas
+
+    def evento(self, tipo, valor=None):
+        """
+        Registra um evento interno (exemplo: depósito ou saque), incrementando o relógio lógico.
+        """
+        self.clock += 1  # Atualiza o relógio lógico local
+        log_entry = {"agencia": self.nome, "evento": tipo, "valor": valor, "clock": self.clock}
+        self.transacoes.append(log_entry)  # Adiciona o evento ao histórico
+        print(json.dumps(log_entry, indent=2))  # Exibe o evento formatado em JSON
+
+    def enviar_transacao(self, destino, valor):
+        """
+        Simula o envio de uma transação para outra agência, anexando o timestamp do evento.
+        """
+        self.clock += 1  # Atualiza o relógio antes de enviar
+        print(f" {self.nome} enviou R${valor} para {destino.nome}. Clock: {self.clock}")
+        destino.receber_transacao(self.clock, valor)
+
+    def receber_transacao(self, timestamp, valor):
+        """
+        Ajusta o relógio lógico ao receber uma transação e registra o evento na agência de destino.
+        """
+        self.clock = max(self.clock, timestamp) + 1  # Sincroniza o relógio lógico
+        self.evento("Recebimento de Transferência", valor)  # Registra a transação recebida
+
+
+# Criando três agências bancárias
+ag1 = Banco("Agência Centro")
+ag2 = Banco("Agência Norte")
+ag3 = Banco("Agência Sul")
+
+# Simulação de eventos e transações entre as agências
+ag1.evento("Depósito", 1000)  # Agência Centro realiza um depósito
+ag1.enviar_transacao(ag2, 500)  # Agência Centro envia R$500 para Agência Norte
+ag2.enviar_transacao(ag3, 200)  # Agência Norte envia R$200 para Agência Sul
+ag3.evento("Saque", 50)  # Agência Sul realiza um saque de R$50
+```
+
+---
+
+## * Explicação Passo a Passo do Código* 
+
+ *Criamos a classe `Banco`*, que representa cada agência bancária.  
+- Cada agência tem um *relógio lógico (`clock`)* e uma *lista de transações (`transacoes`)*.  
+
+*Criamos o método `evento`*, que representa um evento interno na agência.  
+- Sempre que ocorre um evento, o *clock é incrementado* e o evento é armazenado no histórico.  
+
+*Criamos o método `enviar_transacao`*, que representa uma transferência entre agências.  
+- O *clock da agência que envia o dinheiro é incrementado* antes do envio.  
+- A *mensagem inclui o timestamp da transação*.  
+
+*Criamos o método `receber_transacao`*, que ajusta o relógio ao receber dinheiro.  
+- O clock da agência receptora é atualizado para *o maior valor entre o timestamp recebido e o clock local, somado a +1*.  
+
+*Criamos três agências bancárias* (`Agência Centro`, `Agência Norte`, `Agência Sul`).  
+
+*Executamos um fluxo de eventos* para testar o funcionamento do Relógio de Lamport.  
+
+---
+
+## *6️⃣ Conclusão*
+
+O **Relógio de Lamport** foi implementado com sucesso no sistema bancário, garantindo que todas as transações sigam uma ordem lógica correta.  
+
+Os *principais desafios* foram:  
+*Entender a necessidade do algoritmo*, já que não estamos acostumados a lidar com falta de sincronização entre processos.  
+*Aplicar corretamente a atualização do relógio lógico*, garantindo que ele sempre cresça de forma coerente.  
+*Criar um exemplo prático*, que mostre a importância da ordenação dos eventos no mundo real.  
+
+Após superar esses desafios, ficou claro *por que* o Relógio de Lamport é essencial em sistemas distribuídos. Ele resolve o problema da *falta de sincronização de relógios físicos*, garantindo que os eventos aconteçam em uma ordem bem definida.  

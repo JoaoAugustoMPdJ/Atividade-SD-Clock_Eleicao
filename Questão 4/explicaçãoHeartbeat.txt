@@ -1,0 +1,173 @@
+## * Introdução*
+
+Este projeto implementa um *Sistema de Monitoramento de Servidores*, que verifica periodicamente o status de servidores em um sistema distribuído. O objetivo é detectar quando um servidor cai e responder de forma adequada, garantindo que o sistema continue funcionando de maneira confiável.
+
+Para ilustrar seu funcionamento, foi criado um cenário onde dois servidores são monitorados. Quando um servidor cai, o sistema imediatamente detecta a falha e notifica o problema.
+
+---
+
+## * Conceito do Sistema de Monitoramento*  
+
+Em sistemas distribuídos, é essencial monitorar o status dos servidores para garantir a disponibilidade e a confiabilidade do sistema. O *Sistema de Monitoramento* funciona da seguinte maneira:  
+
+1. *Cada servidor envia um sinal periódico (heartbeat)* para indicar que está ativo.  
+2. *O monitor verifica regularmente o status dos servidores*.  
+3. *Se um servidor não enviar o sinal dentro de um período esperado*, ele é considerado fora do ar.  
+4. *O sistema responde à falha*, notificando o problema e removendo o servidor da lista de servidores ativos.  
+
+Isso permite que o sistema detecte falhas rapidamente e tome as medidas necessárias para manter a operação contínua.  
+
+---
+
+## *Desafios Encontrados na Implementação*  
+
+Como iniciante em *Sistemas Distribuídos*, alguns desafios foram enfrentados ao implementar o sistema:  
+
+### * 1. Simular o Envio de Heartbeats*  
+Inicialmente, não estava claro como simular o envio de heartbeats de forma realista. Para resolver isso, criei um método que envia mensagens periódicas enquanto o servidor está ativo.  
+
+### * 2. Detectar a Falha de um Servidor*  
+Outro desafio foi detectar quando um servidor cai. Isso foi resolvido verificando periodicamente o status dos servidores e removendo aqueles que não estão mais ativos.  
+
+### * 3. Responder à Falha de um Servidor*  
+Uma das dificuldades foi garantir que o sistema respondesse adequadamente à falha de um servidor. Isso foi resolvido exibindo uma mensagem de alerta e removendo o servidor da lista de servidores ativos.  
+
+---
+
+## * Código Implementado*  
+
+Aqui está a versão final do código, corrigindo os desafios encontrados:  
+
+```python
+import time
+import threading
+
+class Monitoramento:
+    def __init__(self):
+        """
+        Inicializa o sistema de monitoramento.
+        """
+        self.servidores = {}  # Armazena os servidores ativos
+
+    def registrar(self, servidor):
+        """
+        Registra um servidor no sistema de monitoramento.
+        """
+        self.servidores[servidor.id] = servidor
+
+    def verificar_servidores(self):
+        """
+        Verifica periodicamente o status dos servidores.
+        """
+        while True:
+            for id, servidor in list(self.servidores.items()):
+                if not servidor.esta_online():
+                    print(f" Servidor {id} está fora do ar!")
+                    del self.servidores[id]
+                    self.responder_a_falha(id)  # Responde à falha do servidor
+            time.sleep(3)
+
+    def responder_a_falha(self, id):
+        """
+        Responde à falha de um servidor.
+        """
+        print(f" Aplicando medidas de recuperação para o servidor {id}...")
+        # Aqui poderiam ser implementadas ações como notificar administradores ou reiniciar o servidor.
+
+class Servidor:
+    def __init__(self, id):
+        """
+        Inicializa um servidor com um ID e status online.
+        """
+        self.id = id
+        self.online = True  # Indica se o servidor está ativo
+
+    def enviar_heartbeat(self, monitoramento):
+        """
+        Envia heartbeats periódicos enquanto o servidor está ativo.
+        """
+        while self.online:
+            print(f" Servidor {self.id} está ativo")
+            time.sleep(2)
+
+    def esta_online(self):
+        """
+        Retorna o status do servidor.
+        """
+        return self.online
+
+# Criando o sistema de monitoramento e os servidores
+monitor = Monitoramento()
+srv1 = Servidor(1)
+srv2 = Servidor(2)
+
+# Registrando os servidores no monitoramento
+monitor.registrar(srv1)
+monitor.registrar(srv2)
+
+# Iniciando as threads para monitoramento e envio de heartbeats
+thread_monitor = threading.Thread(target=monitor.verificar_servidores)
+thread_srv1 = threading.Thread(target=srv1.enviar_heartbeat, args=(monitor,))
+thread_srv2 = threading.Thread(target=srv2.enviar_heartbeat, args=(monitor,))
+
+thread_monitor.start()
+thread_srv1.start()
+thread_srv2.start()
+
+# Simulando a falha do servidor 2 após 6 segundos
+time.sleep(6)
+srv2.online = False
+```
+
+---
+
+## * Explicação Passo a Passo do Código*  
+
+ *Criamos a classe `Monitoramento`*, que gerencia o status dos servidores.  
+- A variável `servidores` armazena os servidores ativos.  
+- O método `registrar` adiciona um servidor ao sistema de monitoramento.  
+- O método `verificar_servidores` verifica periodicamente o status dos servidores e responde à falha de um servidor.  
+- O método `responder_a_falha` implementa ações de recuperação quando um servidor cai.  
+
+ *Criamos a classe `Servidor`*, que representa um servidor no sistema.  
+- Cada servidor tem um ID e um status (`online` ou `offline`).  
+- O método `enviar_heartbeat` envia mensagens periódicas enquanto o servidor está ativo.  
+- O método `esta_online` retorna o status do servidor.  
+
+ *Criamos o sistema de monitoramento e dois servidores* (`srv1` e `srv2`).  
+
+ *Registramos os servidores no sistema de monitoramento*.  
+
+ *Iniciamos as threads* para monitoramento e envio de heartbeats.  
+
+ *Simulamos a falha do servidor 2* após 6 segundos.  
+
+---
+
+## * Exemplo de Saída do Código*  
+
+Ao rodar o código, a saída pode ser algo como:  
+
+```
+ Servidor 1 está ativo
+ Servidor 2 está ativo
+ Servidor 1 está ativo
+ Servidor 2 está ativo
+ Servidor 1 está ativo
+ Servidor 2 está ativo
+ Servidor 2 está fora do ar!
+Aplicando medidas de recuperação para o servidor 2...
+ Servidor 1 está ativo
+ Servidor 1 está ativo
+```
+
+---
+
+## *Conclusão*  
+
+O *Sistema de Monitoramento de Servidores* foi implementado com sucesso para detectar e responder à falha de servidores em um sistema distribuído.  
+
+Os *principais desafios* foram:  
+*Simular o envio de heartbeats* de forma realista.  
+*Detectar a falha de um servidor* e removê-lo da lista de servidores ativos.  
+*Responder adequadamente à falha*, notificando o problema e aplicando medidas de recuperação.  
