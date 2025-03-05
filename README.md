@@ -1,7 +1,7 @@
 # **Relatório - Implementação de Algoritmos Distribuídos**  
 *Disciplina*: Sistemas Distribuídos  
 *Aluno*: João Augusto Moura Peixoto de Jesus 
-# *Professor*: Felipe Silva  
+*Professor*: Felipe Silva  
 
 ---
 
