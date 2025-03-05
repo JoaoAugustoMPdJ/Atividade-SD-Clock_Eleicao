@@ -1,1 +1,0 @@
-Neste algoritmo temos três agências bancárias que realizam transações. Para evitar problemas de ordem nas operações (exemplo: um saque ser processado antes de um depósito), cada agência mantém um relógio lógico que sincroniza as operações
